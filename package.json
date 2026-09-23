@@ -1,0 +1,21 @@
+{
+  "name": "diablo-base",
+  "version": "1.0.0",
+  "description": "Diablo Base - Base gratuita criada por dylan Modz e totalmente migrada para Zapo (: ",
+  "main": "connect.js",
+  "author": "dylan Modz",
+  "homepage": "https://tokito-apis.com.br",
+  "license": "MIT",
+  "scripts": {
+    "start": "node connect.js"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cfonts": "^3.3.1",
+    "chalk": "^4.1.2",
+    "zapo-js": "1.8.2"
+  }
+}
