@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./banner.jpg" alt="Diablo Base" width="100%">
+  <img src="https://raw.githubusercontent.com/Yoshirukkj/Download-/main/s4fdiy.jpg" alt="Diablo Base" width="100%">
 </p>
 
 # 🍁 Diablo Base
