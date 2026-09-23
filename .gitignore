@@ -1,6 +1,0 @@
-# Sessao/autenticacao gerada em execucao
-database/sessao/
-
-# Dados de grupos gerados em execucao
-dados/grupos/*.json
-!dados/grupos/.gitkeep
