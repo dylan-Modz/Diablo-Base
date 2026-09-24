@@ -4,7 +4,7 @@
 
 # 🍁 Diablo Base
 
-Base gratuita para bots de WhatsApp, criada por **Dylan Modz** e totalmente migrada para **Zapo**.
+Base gratuita para bots de WhatsApp, criada por **Dylan Modz**. A branch principal está em modo de teste da biblioteca própria **@dylan/wpp**.
 
 Feita principalmente para iniciantes que querem aprender, modificar comandos e criar seu próprio bot de forma simples.
 
