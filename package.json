@@ -1,18 +1,21 @@
 {
   "name": "diablo-base",
   "version": "1.0.0",
-  "description": "Diablo Base - Base gratuita criada por dylan Modz e totalmente migrada para Zapo (: ",
-  "main": "connect.js",
+  "description": "Diablo Base - ambiente de teste para a biblioteca @dylan/wpp",
+  "main": "wpp-test.js",
   "author": "dylan Modz",
   "homepage": "https://tokito-apis.com.br",
   "license": "MIT",
   "scripts": {
-    "start": "node connect.js"
+    "start": "node wpp-test.js",
+    "start:legacy": "node connect.js",
+    "test:wpp": "node -e \"import('@dylan/wpp').then(m=>console.log('@dylan/wpp',m.WPP_VERSION,'carregado')).catch(e=>{console.error(e);process.exit(1)})\""
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.5.0"
   },
   "dependencies": {
+    "@dylan/wpp": "file:./vendor/dylan-wpp-0.1.0-alpha.1.tgz",
     "axios": "^1.12.2",
     "cfonts": "^3.3.1",
     "chalk": "^4.1.2",
