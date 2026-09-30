@@ -89,7 +89,9 @@ const from = info?.groupJid || ''
 const acao = info?.action || ''
 if(!from || !['add', 'remove', 'promote', 'demote'].includes(acao)) return
 
-const dirGroup = path.join(__dirname, 'dados', 'grupos', `${String(from).replace(/[\\/]/g, '_')}.json`)
+const pastaGrupos = path.join(__dirname, 'dados', 'grupos')
+fs.mkdirSync(pastaGrupos, { recursive: true })
+const dirGroup = path.join(pastaGrupos, `${String(from).replace(/[\\/]/g, '_')}.json`)
 if(!fs.existsSync(dirGroup)) return
 
 let dataGp
@@ -325,7 +327,9 @@ groupMembers = groupMetadata?.participants || []
 
 //=============[ JSON DO GRUPO ]=============\\
 
-const dirGroup = path.join(__dirname, 'dados', 'grupos', `${String(from).replace(/[\\/]/g, '_')}.json`)
+const pastaGrupos = path.join(__dirname, 'dados', 'grupos')
+fs.mkdirSync(pastaGrupos, { recursive: true })
+const dirGroup = path.join(pastaGrupos, `${String(from).replace(/[\\/]/g, '_')}.json`)
 
 const data_IDGP = [{
 name: groupName,
