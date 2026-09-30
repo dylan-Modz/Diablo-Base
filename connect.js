@@ -85,10 +85,10 @@ resolve(resposta)
 
 async function numero() {
 while(true) {
-const resposta = await perguntar(chalk.blue('Digite o número do WhatsApp com DDI: ') + chalk.white(''))
+const resposta = await perguntar(chalk.red('Digite o número do WhatsApp com DDI: ') + chalk.white(''))
 const n = String(resposta || '').replace(/\D/g, '')
 if(n.length >= 10) return n
-console.log(chalk.blue('[ NÚMERO ] ') + chalk.white('Digite um número válido com DDI. Exemplo: 5599999999999'))
+console.log(chalk.red('[ NÚMERO ] ') + chalk.white('Digite um número válido com DDI. Exemplo: 5599999999999'))
 }
 }
 
@@ -107,7 +107,7 @@ reconectando = false
 try {
 await diablo.connect()
 } catch(e) {
-console.log(chalk.blue('[ CONEXÃO ] ') + chalk.white(e?.message || e))
+console.log(chalk.red('[ CONEXÃO ] ') + chalk.white(e?.message || e))
 reconectar()
 }
 }, tempo)
@@ -120,7 +120,7 @@ const raw = String(code || '').replace(/[-\s]/g, '')
 if(!raw || raw === ultimoCodigo) return
 ultimoCodigo = raw
 const formatado = raw.match(/.{1,4}/g)?.join('-') || raw
-console.log(chalk.blue('Código de pareamento: ') + chalk.white.bold(formatado))
+console.log(chalk.red('Código de pareamento: ') + chalk.white.bold(formatado))
 console.log(chalk.white('No WhatsApp: Aparelhos conectados > Conectar um aparelho > Conectar com número de telefone.'))
 }
 
@@ -135,7 +135,7 @@ const code = await diablo.auth.requestPairingCode(n)
 codigo(code)
 } catch(e) {
 pedido = false
-console.log(chalk.blue('[ ERRO ] ') + chalk.white(e?.message || e))
+console.log(chalk.red('[ ERRO ] ') + chalk.white(e?.message || e))
 } finally {
 pareando = false
 }
@@ -178,17 +178,17 @@ tentativa = 0
 reconectando = false
 console.log('\n' + banner1)
 console.log(banner2)
-console.log(chalk.blue('✓ ') + chalk.white(`${NomeDoBot} conectado com sucesso!`))
+console.log(chalk.red('✓ ') + chalk.white(`${NomeDoBot} conectado com sucesso!`))
 break
 
 case 'close':
 case 'closed':
 if(encerrando) break
 if(event.isLogout) {
-console.log(chalk.blue('[ CONEXÃO ] ') + chalk.white('A conta foi desvinculada. Reinicie para fazer um novo pareamento.'))
+console.log(chalk.red('[ CONEXÃO ] ') + chalk.white('A conta foi desvinculada. Reinicie para fazer um novo pareamento.'))
 break
 }
-console.log(chalk.blue('[ CONEXÃO ] ') + chalk.white(`Conexão encerrada${event.reason ? `: ${event.reason}` : '.'}`))
+console.log(chalk.red('[ CONEXÃO ] ') + chalk.white(`Conexão encerrada${event.reason ? `: ${event.reason}` : '.'}`))
 reconectar()
 break
 
@@ -202,7 +202,7 @@ try {
 const startdiablo = carregar()
 await startdiablo(diablo, event, 'group')
 } catch(e) {
-console.log(chalk.blue('[ GRUPO ] ') + chalk.white(e?.message || e))
+console.log(chalk.red('[ GRUPO ] ') + chalk.white(e?.message || e))
 }
 })
 
@@ -215,7 +215,7 @@ try {
 const startdiablo = carregar()
 await startdiablo(diablo, info, 'message')
 } catch(e) {
-console.log(chalk.blue('[ ERRO ] ') + chalk.white(e?.message || e))
+console.log(chalk.red('[ ERRO ] ') + chalk.white(e?.message || e))
 }
 })
 
@@ -234,7 +234,7 @@ if(!fs.existsSync(file)) continue
 
 fs.watchFile(file, { interval: 1000 }, () => {
 const nome = path.relative(__dirname, file)
-console.log(chalk.blue(`Alterações salvas, carregando novamente: '${nome}'`))
+console.log(chalk.red(`Alterações salvas, carregando novamente: '${nome}'`))
 
 try { delete require.cache[require.resolve(file)] } catch {}
 try { delete require.cache[require.resolve('./dados/lib/index.js')] } catch {}
@@ -245,7 +245,7 @@ try { delete require.cache[require.resolve('./diablo.js')] } catch {}
 //=============[ INÍCIO ]=============\\
 
 diablo.connect().catch(e => {
-console.log(chalk.blue('[ ERRO ] ') + chalk.white(e?.message || e))
+console.log(chalk.red('[ ERRO ] ') + chalk.white(e?.message || e))
 reconectar()
 })
 
