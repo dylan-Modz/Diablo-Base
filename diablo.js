@@ -539,7 +539,7 @@ const detected = cmd ? 'cmd' : isImage ? 'image' : isVideo ? 'video' : isAudio ?
 const msgType = detected ? typeMap[detected][0] : 'MENSAGEM'
 const msgContent = detected ? typeMap[detected][1] : chalk.white((body || '').slice(0, 50) + ((body || '').length > 50 ? '...' : ''))
 
-console.log(chalk.cyanBright(`╭──. ݁ ⛧ ₊ ⊹ . ݁ ˖ ❆ິ̸ . ݁──╮
+console.log(chalk.redBright(`╭──. ݁ ⛧ ₊ ⊹ . ݁ ˖ ❆ິ̸ . ݁──╮
 |${grupo ? '👥 MENSAGEM NO GRUPO' : '👤 MENSAGEM NO PRIVADO'}
 ╰──. ݁ ⛧ ₊ ⊹ . ݁ ˖ ❆ິ̸ . ݁──╯
 ╭──. ݁ ⛧ ₊ ⊹ . ݁ ˖ ❆ິ̸ . ݁──╮
@@ -1113,7 +1113,7 @@ break
 
 fs.watchFile(require.resolve(__filename), { interval: 1000 }, () => {
 fs.unwatchFile(require.resolve(__filename))
-console.log(chalk.blue(`Alterações salvas, carregando novamente: '${__filename}'`))
+console.log(chalk.red(`Alterações salvas, carregando novamente: '${__filename}'`))
 delete require.cache[require.resolve(__filename)]
 })
 
