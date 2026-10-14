@@ -46,6 +46,18 @@ npm start
 
 Na primeira inicialização, coloque o número do WhatsApp com DDI e faça o pareamento.
 
+### 🔄 Atualizar uma instalação existente
+
+Na pasta da base, execute:
+
+```bash
+git pull
+npm install
+npm start
+```
+
+O `npm install` instala a versão da Zapo indicada no `package.json`. Os menus interativos são mantidos pelo código da própria base.
+
 ---
 
 ## 🌐 Tokito APIs
