@@ -4,7 +4,7 @@
 
 # 🍁 Diablo Base
 
-Base gratuita para bots de WhatsApp, criada por **Dylan Modz**. A branch principal está em modo de teste da biblioteca própria **@dylan/wpp**.
+Base gratuita para bots de WhatsApp, criada por **Dylan Modz**. A base utiliza a biblioteca **Zapo** para conexão com o WhatsApp.
 
 Feita principalmente para iniciantes que querem aprender, modificar comandos e criar seu próprio bot de forma simples.
 
@@ -64,21 +64,3 @@ A Diablo Base foi totalmente migrada para a biblioteca **Zapo**.
 https://zapo.to
 
 
-## 🧪 Teste com @dylan/wpp
-
-A branch principal já inclui o pacote local `@dylan/wpp 0.1.0-alpha.1` para testar conexão e código de pareamento dentro da Diablo Base.
-
-```bash
-npm install
-npm start
-```
-
-Ao iniciar, o teste usa `database/dylan-wpp` para a sessão. Se `connectionNumber` não estiver definido em `dados/config.json`, o terminal pede o número com DDI.
-
-Para apenas conferir se o pacote carregou:
-
-```bash
-npm run test:wpp
-```
-
-O launcher antigo da base continua disponível separadamente em `npm run start:legacy`.
