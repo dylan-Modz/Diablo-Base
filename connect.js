@@ -14,8 +14,8 @@
 
 //=============[ COMEÇO DE TUDO ]=============\\
 
-// A Zapo modificada fica inteira na pasta ./zapo da própria base.
-// Ela não depende mais de cópia em dados/zapo nem de patch em node_modules.
+// A conexão usa zapo-js instalada pelo npm.
+// Os recursos extras de menus ficam em dados/lib/zapo-interativos.js.
 
 const { fs, path, chalk, WaClient, createStore, sessao, logger, banner1, banner2 } = require('./dados/lib/index.js')
 const { NomeDoBot } = require('./dados/config.json')
@@ -53,14 +53,16 @@ history: { enabled: false },
 recoverFromClientTooOld: true
 }, logger)
 
-// Confirma que a Zapo local carregada pela base contém os recursos modificados.
-// Se isto falhar, o bot para aqui em vez de esconder o problema usando menu normal.
+// Preserva carousel, botões e listas sem modificar a biblioteca instalada.
+require('./dados/lib/zapo-interativos.js').instalarInterativos(diablo)
+
+// Falha claramente se a Zapo não disponibilizar os menus interativos.
 if (
   typeof diablo.message?.sendCarousel !== 'function' ||
   typeof diablo.message?.sendInteractive !== 'function'
 ) {
   throw new Error(
-    '[DIABLO] Zapo local não possui os recursos esperados. ' +
+    '[DIABLO] Recursos interativos da Zapo indisponíveis. ' +
     'sendCarousel/sendInteractive não estão disponíveis.'
   )
 }
