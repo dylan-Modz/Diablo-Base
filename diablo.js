@@ -644,8 +644,7 @@ card.gifPlayback = true
 }
 
 try {
-// A Zapo modificada é carregada diretamente da pasta ./zapo pela base.
-// Portanto este envio é sempre o Menu List dentro de um card de carrossel.
+// Menu List em um card de carrossel via compatibilidade interativa da Zapo.
 await diablo.message.sendCarousel(from, {
 viewOnce: true,
 carouselCardType: 1,
