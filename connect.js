@@ -1,263 +1,185 @@
 //==============================================================\\
 //                         DIABLO BASE
 //                       Dev: Dylan Modz
-//
-// Base gratuita feita para iniciantes e para quem quer começar
-// a criar e modificar bots de WhatsApp de forma simples.
-//
-// 🌐 APIs: https://tokito-apis.com.br
-// 👉 Canal: Siga o canal "💙 ⟡ 𝕮𝖍𝖆𝖓𝖓𝖊𝖑-𝑻𝑶𝑲𝑰𝑻𝑶-𝑨𝑷𝑰'𝑺 ⟡ 💙 #META 4k" no WhatsApp: https://whatsapp.com/channel/0029VbCAgovIyPtbjBhrIi3u
-//
-// Pode modificar e usar do seu jeito.
+//                      Stone WPP
 //==============================================================\\
 
+'use strict'
 
-//=============[ COMEÇO DE TUDO ]=============\\
-
-// A conexão usa zapo-js instalada pelo npm.
-// Os recursos extras de menus ficam em dados/lib/zapo-interativos.js.
-
-const { fs, path, chalk, WaClient, createStore, sessao, logger, banner1, banner2 } = require('./dados/lib/index.js')
-const { NomeDoBot } = require('./dados/config.json')
+const fs = require('fs')
+const path = require('path')
 const readline = require('readline')
+const chalk = require('chalk')
+const { banner1, banner2 } = require('./dados/lib/index.js')
+const { NomeDoBot } = require('./dados/config.json')
 
-//=============[ SESSÃO ]=============\\
-
-const store = createStore({
-backends: {
-arquivo: sessao(path.join(__dirname, 'database', 'sessao'))
-},
-providers: {
-auth: 'arquivo',
-signal: 'arquivo',
-preKey: 'arquivo',
-session: 'arquivo',
-identity: 'arquivo',
-senderKey: 'arquivo',
-appState: 'arquivo',
-privacyToken: 'arquivo',
-messages: 'none',
-threads: 'none',
-contacts: 'none'
-}
-})
-
-//=============[ CONEXÃO ]=============\\
-
-const diablo = new WaClient({
-store,
-sessionId: 'diablo',
-connectTimeoutMs: 15000,
-nodeQueryTimeoutMs: 30000,
-history: { enabled: false },
-recoverFromClientTooOld: true
-}, logger)
-
-// Preserva carousel, botões e listas sem modificar a biblioteca instalada.
-require('./dados/lib/zapo-interativos.js').instalarInterativos(diablo)
-
-// Falha claramente se a Zapo não disponibilizar os menus interativos.
-if (
-  typeof diablo.message?.sendCarousel !== 'function' ||
-  typeof diablo.message?.sendInteractive !== 'function'
-) {
-  throw new Error(
-    '[DIABLO] Recursos interativos da Zapo indisponíveis. ' +
-    'sendCarousel/sendInteractive não estão disponíveis.'
-  )
-}
-
-let pareando = false
-let pedido = false
-let pareado = false
+const PASTA_SESSAO = path.join(__dirname, 'database', 'stone-session')
+let stoneAtual = null
+let salvarCredenciais = null
+let DisconnectReason = {}
 let encerrando = false
-let ultimoCodigo = ''
-let tentativa = 0
 let reconectando = false
+let tentativas = 0
+let pedindoCodigo = false
+let numeroPareamento = String(process.env.PAIRING_NUMBER || '').replace(/\D/g, '')
 
-function perguntar(texto) {
-return new Promise(resolve => {
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-rl.question(texto, resposta => {
-rl.close()
-resolve(resposta)
-})
-})
+function perguntar(pergunta) {
+  if (!process.stdin.isTTY) {
+    throw new Error('Defina PAIRING_NUMBER com DDI no ambiente para parear sem terminal.')
+  }
+  return new Promise(resolve => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+    rl.question(pergunta, resposta => {
+      rl.close()
+      resolve(resposta)
+    })
+  })
 }
 
-async function numero() {
-while(true) {
-const resposta = await perguntar(chalk.red('Digite o número do WhatsApp com DDI: ') + chalk.white(''))
-const n = String(resposta || '').replace(/\D/g, '')
-if(n.length >= 10) return n
-console.log(chalk.red('[ NÚMERO ] ') + chalk.white('Digite um número válido com DDI. Exemplo: 5599999999999'))
-}
-}
-
-function carregar() {
-return require('./diablo.js')
+async function obterNumero() {
+  while (!numeroPareamento) {
+    const resposta = await perguntar(chalk.cyan('Digite o numero do WhatsApp com DDI: '))
+    const numero = String(resposta || '').replace(/\D/g, '')
+    if (numero.length >= 10) numeroPareamento = numero
+    else console.log(chalk.red('[ DIABLO ] Numero invalido. Informe DDI e numero.'))
+  }
+  if (numeroPareamento.length < 10) throw new Error('PAIRING_NUMBER invalido: inclua o DDI.')
+  return numeroPareamento
 }
 
-async function reconectar() {
-if(reconectando) return
-reconectando = true
-const tempo = Math.min(30000, 1000 * 2 ** tentativa)
-tentativa++
-
-setTimeout(async() => {
-reconectando = false
-try {
-await diablo.connect()
-} catch(e) {
-console.log(chalk.red('[ CONEXÃO ] ') + chalk.white(e?.message || e))
-reconectar()
-}
-}, tempo)
-}
-
-//=============[ PAREAMENTO ]=============\\
-
-function codigo(code) {
-const raw = String(code || '').replace(/[-\s]/g, '')
-if(!raw || raw === ultimoCodigo) return
-ultimoCodigo = raw
-const formatado = raw.match(/.{1,4}/g)?.join('-') || raw
-console.log(chalk.red('Código de pareamento: ') + chalk.white.bold(formatado))
-console.log(chalk.white('No WhatsApp: Aparelhos conectados > Conectar um aparelho > Conectar com número de telefone.'))
+async function pedirCodigo(stone, registrado) {
+  if (registrado || pedindoCodigo || encerrando || stone !== stoneAtual) return
+  pedindoCodigo = true
+  try {
+    const numero = await obterNumero()
+    if (encerrando || stone !== stoneAtual) return
+    const resultado = await stone.requestPairingCode(numero)
+    const codigo = String(resultado || '').replace(/[-\s]/g, '')
+    console.log(chalk.cyan('[ DIABLO ] Codigo de pareamento: ') +
+      chalk.white.bold(codigo.match(/.{1,4}/g)?.join('-') || codigo))
+    console.log(chalk.white('WhatsApp > Aparelhos conectados > Conectar com numero de telefone.'))
+  } catch (erro) {
+    pedindoCodigo = false
+    console.error(chalk.red('[ PAREAMENTO ] '), erro?.message || erro)
+  }
 }
 
-async function parear() {
-if(pareando || pedido || pareado || encerrando) return
-pareando = true
-pedido = true
-
-try {
-const n = await numero()
-const code = await diablo.auth.requestPairingCode(n)
-codigo(code)
-} catch(e) {
-pedido = false
-console.log(chalk.red('[ ERRO ] ') + chalk.white(e?.message || e))
-} finally {
-pareando = false
-}
+function comandos() {
+  return require('./diablo.js')
 }
 
-// Evento oficial para fluxo por código.
-diablo.on('auth_pairing_required', async() => {
-await parear()
-})
-
-// Fallback: algumas sessões novas chegam primeiro no QR.
-// O QR só é usado como sinal de que a conexão já está pronta para pedir o código.
-diablo.on('auth_qr', async() => {
-await parear()
-})
-
-// A biblioteca também emite o código; usamos apenas como fallback de exibição.
-diablo.on('auth_pairing_code', ({ code } = {}) => {
-codigo(code)
-})
-
-diablo.on('auth_paired', () => {
-pareado = true
-pedido = true
-})
-
-//=============[ CONNECTION ]=============\\
-
-diablo.on('connection', event => {
-const connection = event.status
-
-switch(connection) {
-
-case 'connecting':
-break
-
-case 'open':
-pareado = true
-tentativa = 0
-reconectando = false
-console.log('\n' + banner1)
-console.log(banner2)
-console.log(chalk.red('✓ ') + chalk.white(`${NomeDoBot} conectado com sucesso!`))
-break
-
-case 'close':
-case 'closed':
-if(encerrando) break
-if(event.isLogout) {
-console.log(chalk.red('[ CONEXÃO ] ') + chalk.white('A conta foi desvinculada. Reinicie para fazer um novo pareamento.'))
-break
-}
-console.log(chalk.red('[ CONEXÃO ] ') + chalk.white(`Conexão encerrada${event.reason ? `: ${event.reason}` : '.'}`))
-reconectar()
-break
-
-}
-})
-
-//=============[ EVENTOS DO GRUPO ]=============\\
-
-diablo.on('group', async event => {
-try {
-const startdiablo = carregar()
-await startdiablo(diablo, event, 'group')
-} catch(e) {
-console.log(chalk.red('[ GRUPO ] ') + chalk.white(e?.message || e))
-}
-})
-
-//=============[ MENSAGENS ]=============\\
-
-diablo.on('message', async info => {
-if(!info?.message) return
-
-try {
-const startdiablo = carregar()
-await startdiablo(diablo, info, 'message')
-} catch(e) {
-console.log(chalk.red('[ ERRO ] ') + chalk.white(e?.message || e))
-}
-})
-
-//=============[ ATUALIZAÇÕES ]=============\\
-
-const arquivos = [
-path.join(__dirname, 'diablo.js'),
-path.join(__dirname, 'dados', 'lib', 'index.js'),
-path.join(__dirname, 'dados', 'lib', 'main.js'),
-path.join(__dirname, 'dados', 'lib', 'menus.js'),
-path.join(__dirname, 'dados', 'lib', 'global.js')
-]
-
-for(const file of arquivos) {
-if(!fs.existsSync(file)) continue
-
-fs.watchFile(file, { interval: 1000 }, () => {
-const nome = path.relative(__dirname, file)
-console.log(chalk.red(`Alterações salvas, carregando novamente: '${nome}'`))
-
-try { delete require.cache[require.resolve(file)] } catch {}
-try { delete require.cache[require.resolve('./dados/lib/index.js')] } catch {}
-try { delete require.cache[require.resolve('./diablo.js')] } catch {}
-})
+function agendarReconexao() {
+  if (encerrando || reconectando) return
+  reconectando = true
+  const tempo = Math.min(30000, 1000 * 2 ** Math.min(tentativas++, 5))
+  console.log(chalk.yellow('[ CONEXAO ] Tentando reconectar...'))
+  setTimeout(async () => {
+    reconectando = false
+    if (encerrando) return
+    try {
+      await iniciarStone()
+    } catch (erro) {
+      console.error(chalk.red('[ RECONEXAO ] '), erro?.message || erro)
+      agendarReconexao()
+    }
+  }, tempo)
 }
 
-//=============[ INÍCIO ]=============\\
+async function iniciarStone() {
+  const { default: createStone, useMultiFileAuthState, DisconnectReason: causas } =
+    await import('@stone-wpp/ofc')
+  DisconnectReason = causas || {}
+  const { state, saveCreds } = await useMultiFileAuthState(PASTA_SESSAO)
+  const stone = createStone({
+    auth: state,
+    syncFullHistory: false,
+    markOnlineOnConnect: true
+  })
+  stoneAtual = stone
+  salvarCredenciais = saveCreds
+  pedindoCodigo = false
 
-diablo.connect().catch(e => {
-console.log(chalk.red('[ ERRO ] ') + chalk.white(e?.message || e))
-reconectar()
-})
+  stone.ev.on('creds.update', saveCreds)
+
+  stone.ev.on('connection.update', ({ connection, lastDisconnect, qr } = {}) => {
+    if (stone !== stoneAtual || encerrando) return
+    if (qr && !state.creds.registered) {
+      void pedirCodigo(stone, state.creds.registered)
+    }
+    if (connection === 'open') {
+      tentativas = 0
+      pedindoCodigo = true
+      console.log('\n' + banner1)
+      console.log(banner2)
+      console.log(chalk.green('✓ ') +
+        chalk.white((NomeDoBot || 'Diablo Base') + ' conectado com Stone WPP!'))
+    } else if (connection === 'close') {
+      const codigo = lastDisconnect?.error?.output?.statusCode
+      if (codigo === DisconnectReason.loggedOut || codigo === 401) {
+        console.error(chalk.red('[ CONEXAO ] WhatsApp desvinculado.'))
+        console.error(chalk.yellow('Faca backup da sessao antes de parear novamente.'))
+        return
+      }
+      agendarReconexao()
+    }
+  })
+
+  stone.ev.on('messages.upsert', async ({ messages, type } = {}) => {
+    if (encerrando || stone !== stoneAtual || type !== 'notify') return
+    for (const info of messages || []) {
+      if (!info?.message) continue
+      try {
+        await comandos()(stone, info, 'message')
+      } catch (erro) {
+        console.error(chalk.red('[ MENSAGEM ] '), erro?.stack || erro)
+      }
+    }
+  })
+
+  stone.ev.on('group-participants.update', async evento => {
+    if (encerrando || stone !== stoneAtual) return
+    try {
+      await comandos()(stone, {
+        groupJid: evento.id,
+        action: evento.action,
+        participants: evento.participants
+      }, 'group')
+    } catch (erro) {
+      console.error(chalk.red('[ GRUPO ] '), erro?.stack || erro)
+    }
+  })
+}
+
+for (const relativo of [
+  'diablo.js',
+  'dados/lib/index.js',
+  'dados/lib/main.js',
+  'dados/lib/menus.js',
+  'dados/lib/global.js',
+  'dados/lib/stone-mensagens.js'
+]) {
+  const arquivo = path.join(__dirname, relativo)
+  if (!fs.existsSync(arquivo)) continue
+  fs.watchFile(arquivo, { interval: 1000 }, () => {
+    for (const nome of ['./diablo.js', './dados/lib/index.js', './dados/lib/stone-mensagens.js']) {
+      try { delete require.cache[require.resolve(nome)] } catch {}
+    }
+    console.log(chalk.cyan('[ ATUALIZADO ] ') + relativo)
+  })
+}
 
 async function fechar() {
-if(encerrando) return
-encerrando = true
-try { await diablo.disconnect() } catch {}
-try { await store.destroy() } catch {}
-process.exit(0)
+  if (encerrando) return
+  encerrando = true
+  try { await salvarCredenciais?.() } catch {}
+  try { await stoneAtual?.end(undefined) } catch {}
+  process.exit(0)
 }
 
 process.on('SIGINT', fechar)
 process.on('SIGTERM', fechar)
+
+iniciarStone().catch(erro => {
+  console.error(chalk.red('[ STONE ] '), erro?.stack || erro)
+  agendarReconexao()
+})

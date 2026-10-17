@@ -17,6 +17,7 @@
 const { fs, os, path, spawn, axios, chalk, linguagem, mess, midia, numero, achar, alvo, baixar } = require('./dados/lib/index.js')
 let { NomeDoBot, prefix, ownerName, ownerNumber } = require('./dados/config.json')
 const { API_URL, API_KEY_DIABLO } = require('./dados/api.json')
+const { criarMensageiro } = require('./dados/lib/stone-mensagens.js')
 
 
 //=============[ SELO VERIFICADO GLOBAL ]=============\\
@@ -78,6 +79,8 @@ console.error(err.stack)
 
 async function startdiablo(diablo, info, evento = 'message') {
 
+const { enviar, enviarMenu, baixarMidia } = criarMensageiro(diablo)
+
 let necessarios = lerNecessarios()
 let isVerificado = verificadoLigado(necessarios.verificado)
 const seloEvento = isVerificado ? criarSeloMeta(NomeDoBot || 'Diablo Base') : null
@@ -99,12 +102,12 @@ try { dataGp = JSON.parse(fs.readFileSync(dirGroup, 'utf8')) } catch { return }
 if(!Array.isArray(dataGp) || !dataGp[0]) return
 
 let groupMetadata
-try { groupMetadata = await diablo.group.queryGroupMetadata(from) } catch { return }
+try { groupMetadata = await diablo.groupMetadata(from) } catch { return }
 
 const groupName = groupMetadata?.subject || dataGp[0]?.name || 'Grupo'
 const groupDesc = groupMetadata?.desc || ''
 const groupMembers = groupMetadata?.participants || []
-const cred = diablo.getCredentials?.() || {}
+const cred = { meJid: diablo.user?.id || diablo.user?.jid || '' }
 const botNumber = cred.meJid || ''
 
 const padrao = {
@@ -154,7 +157,7 @@ const feito = acao === 'promote' ? 'ᴘʀᴏᴍᴏᴠɪᴅᴏ ᴀ ᴀᴅᴍ.' : 
 const responsavel = adm ? `@${numero(adm)}` : 'ᴅᴇsᴄᴏɴʜᴇᴄɪᴅᴏ'
 const mentions = [user, adm].filter(Boolean)
 
-await diablo.message.send(from, {
+await enviar(from, {
 type: 'text',
 text: `*${titulo}*\n\n*@${numero(user)} ғᴏɪ ${feito}*\n\n*ᴀᴅᴍ ʀᴇsᴘᴏɴsᴀᴠᴇʟ: ${responsavel}*\n\n*ᴅᴀᴛᴀ: ${hora}*`
 }, { ...(seloEvento ? { quote: seloEvento } : {}), mentions }).catch(() => {})
@@ -172,7 +175,7 @@ const bye = (n, gp) => `*@${n} sᴀɪᴜ ᴅᴏ ${gp}.*`
 
 const perfil = async jid => {
 try {
-const pic = await diablo.profile.getProfilePicture(jid, 'image')
+const pic = await diablo.profilePictureUrl(jid, 'image')
 return pic?.url || ''
 } catch { return '' }
 }
@@ -208,7 +211,7 @@ if(fundo) {
 const media = Buffer.from(fundo, 'base64')
 
 if(tipo === 'video' || tipo === 'gif') {
-await diablo.message.send(from, {
+await enviar(from, {
 type: 'video',
 media,
 mimetype: 'video/mp4',
@@ -218,7 +221,7 @@ gifPlayback: true
 continue
 }
 
-await diablo.message.send(from, {
+await enviar(from, {
 type: 'image',
 media,
 mimetype: tipo === 'png' ? 'image/png' : 'image/jpeg',
@@ -231,7 +234,7 @@ const foto = await perfil(user)
 if(foto) {
 try {
 const media = await baixar(foto)
-await diablo.message.send(from, {
+await enviar(from, {
 type: 'image',
 media,
 mimetype: 'image/jpeg',
@@ -241,7 +244,7 @@ continue
 } catch {}
 }
 
-await diablo.message.send(from, { type: 'text', text: teks }, { ...(seloEvento ? { quote: seloEvento } : {}), mentions: [user] }).catch(() => {})
+await enviar(from, { type: 'text', text: teks }, { ...(seloEvento ? { quote: seloEvento } : {}), mentions: [user] }).catch(() => {})
 }
 return
 }
@@ -318,7 +321,7 @@ let groupMembers = []
 
 if(grupo) {
 try {
-groupMetadata = await diablo.group.queryGroupMetadata(from)
+groupMetadata = await diablo.groupMetadata(from)
 groupName = groupMetadata?.subject || 'Grupo'
 groupDesc = groupMetadata?.desc || ''
 groupMembers = groupMetadata?.participants || []
@@ -399,7 +402,7 @@ fs.writeFileSync(cfg, JSON.stringify(data, null, 2))
 
 //=============[ ADMS/DONO/ETC..CONST ]=============\\
 
-const cred = diablo.getCredentials?.() || {}
+const cred = { meJid: diablo.user?.id || diablo.user?.jid || '' }
 const botNumber = cred.meJid || ''
 const autor = achar(groupMembers, sender, alt)
 const bot = achar(groupMembers, botNumber)
@@ -438,39 +441,39 @@ const menc_prt_nmr = busca.length > 12 && !marcou ? numClean(busca) : (menc_prt 
 
 //=============[ REPLYS / MÍDIAS ]=============\\
 
-const reply = async text => diablo.message.send(from, String(text || ' '), { quote: selo })
+const reply = async text => enviar(from, String(text || ' '), { quote: selo })
 
 const imagem = async(id, file, caption = '', quote = selo) => {
 const media = /^https?:\/\//i.test(String(file)) ? await baixar(file) : file
-return diablo.message.send(id, { type: 'image', media, mimetype: 'image/jpeg', caption }, { quote })
+return enviar(id, { type: 'image', media, mimetype: 'image/jpeg', caption }, { quote })
 }
 
 const video = async(id, file, caption = '', quote = selo) => {
 const media = /^https?:\/\//i.test(String(file)) ? await baixar(file) : file
-return diablo.message.send(id, { type: 'video', media, mimetype: 'video/mp4', caption }, { quote })
+return enviar(id, { type: 'video', media, mimetype: 'video/mp4', caption }, { quote })
 }
 
 const audio = async(id, file, quote = selo) => {
 const media = /^https?:\/\//i.test(String(file)) ? await baixar(file) : file
-return diablo.message.send(id, { type: 'audio', media, mimetype: 'audio/mpeg', ptt: false }, { quote })
+return enviar(id, { type: 'audio', media, mimetype: 'audio/mpeg', ptt: false }, { quote })
 }
 
 const sticker = async(id, file, quote = selo) => {
 const media = /^https?:\/\//i.test(String(file)) ? await baixar(file) : file
-return diablo.message.send(id, { type: 'sticker', media, mimetype: 'image/webp' }, { quote })
+return enviar(id, { type: 'sticker', media, mimetype: 'image/webp' }, { quote })
 }
 
-const reagir = async(emoji, id = from) => diablo.message.send(id, { type: 'reaction', emoji, target: info })
-const mentions = async(teks = '', mb = [], quote = selo) => diablo.message.send(from, { type: 'text', text: teks.trim() }, { quote, mentions: mb })
+const reagir = async(emoji, id = from) => enviar(id, { type: 'reaction', emoji, target: info })
+const mentions = async(teks = '', mb = [], quote = selo) => enviar(from, { type: 'text', text: teks.trim() }, { quote, mentions: mb })
 
 const mention = async(teks = '', quote = selo) => {
 const lista = [...teks.matchAll(/@(\d{6,20})/g)].map(v => `${v[1]}@s.whatsapp.net`)
-return diablo.message.send(from, { type: 'text', text: teks.trim() }, { quote, mentions: lista })
+return enviar(from, { type: 'text', text: teks.trim() }, { quote, mentions: lista })
 }
 
 const mencimg = async(teks = '', file, mb = [], quote = selo) => {
 const media = /^https?:\/\//i.test(String(file)) ? await baixar(file) : file
-return diablo.message.send(from, { type: 'image', media, mimetype: 'image/jpeg', caption: teks.trim() }, { quote, mentions: mb })
+return enviar(from, { type: 'image', media, mimetype: 'image/jpeg', caption: teks.trim() }, { quote, mentions: mb })
 }
 
 const painel = async(opt = {}) => {
@@ -483,8 +486,8 @@ if(soAdm && !admin && !dono) return reply(mess.onlyAdmins())
 if(soDono && !dono) return reply(mess.onlyOwner())
 
 const file = midia('fotomenu')
-if(file.type === 'video') return diablo.message.send(from, { type: 'video', media: file.data, mimetype: file.mimetype, caption, gifPlayback: true }, { quote: selo })
-if(file.type === 'image') return diablo.message.send(from, { type: 'image', media: file.data, mimetype: file.mimetype, caption }, { quote: selo })
+if(file.type === 'video') return enviar(from, { type: 'video', media: file.data, mimetype: file.mimetype, caption, gifPlayback: true }, { quote: selo })
+if(file.type === 'image') return enviar(from, { type: 'image', media: file.data, mimetype: file.mimetype, caption }, { quote: selo })
 return reply(caption)
 } catch(e) {
 console.log(e)
@@ -559,9 +562,9 @@ const link = !linkgp && /(?:https?:\/\/|www\.)[^\s]+|(?:[a-z0-9-]+\.)+(?:com|net
 
 const punir = async tipo => {
 if(admin || dono || !botadm || !user) return false
-await diablo.message.send(from, { type: 'text', text: mess.anti(numero(user), tipo) }, { ...(seloEvento ? { quote: seloEvento } : {}), mentions: [user] }).catch(() => {})
-await diablo.message.send(from, { type: 'revoke', target: info }).catch(() => {})
-await diablo.group.removeParticipants(from, [user]).catch(() => {})
+await enviar(from, { type: 'text', text: mess.anti(numero(user), tipo) }, { ...(seloEvento ? { quote: seloEvento } : {}), mentions: [user] }).catch(() => {})
+await enviar(from, { type: 'revoke', target: info }).catch(() => {})
+await diablo.groupParticipantsUpdate(from, [user], 'remove').catch(() => {})
 return true
 }
 
@@ -644,8 +647,8 @@ card.gifPlayback = true
 }
 
 try {
-// Menu List em um card de carrossel via compatibilidade interativa da Zapo.
-await diablo.message.sendCarousel(from, {
+// Menu interativo com lista e midia usando Stone WPP.
+await enviarMenu(from, {
 viewOnce: true,
 carouselCardType: 1,
 cards: [card]
@@ -713,7 +716,7 @@ case 'dono':
 case 'owner': {
 const n = String(ownerNumber || '').replace(/\D/g, ''), donoNome = ownerName || 'Dylan Modz'
 const vcard = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${donoNome}`, `N:${donoNome};;;;`, `TEL;type=CELL;type=VOICE;waid=${n}:+${n}`, 'END:VCARD'].join('\n')
-await diablo.message.send(from, { contactMessage: { displayName: donoNome, vcard } }, { quote: selo })
+await enviar(from, { contactMessage: { displayName: donoNome, vcard } }, { quote: selo })
 }
 break
 
@@ -732,8 +735,8 @@ const membro = achar(groupMembers, marc_tds, mrc_ou_numero, menc_os2)
 if(!membro) return reply(mess.naoEncontrado())
 
 const user = alvo(membro, marc_tds || menc_os2)
-await diablo.message.send(from, { type: 'text', text: `*@${numero(user)} ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*` }, { quote: selo, mentions: [user] })
-await diablo.group.removeParticipants(from, [user])
+await enviar(from, { type: 'text', text: `*@${numero(user)} ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*` }, { quote: selo, mentions: [user] })
+await diablo.groupParticipantsUpdate(from, [user], 'remove')
 }
 break
 
@@ -748,8 +751,8 @@ const membro = achar(groupMembers, marc_tds, mrc_ou_numero, menc_os2)
 if(!membro) return reply(mess.naoEncontrado())
 
 const user = alvo(membro, marc_tds || menc_os2)
-await diablo.group.promoteParticipants(from, [user])
-await diablo.message.send(from, { type: 'text', text: `*@${numero(user)} ғᴏɪ ᴘʀᴏᴍᴏᴠɪᴅᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ.*` }, { quote: selo, mentions: [user] })
+await diablo.groupParticipantsUpdate(from, [user], 'promote')
+await enviar(from, { type: 'text', text: `*@${numero(user)} ғᴏɪ ᴘʀᴏᴍᴏᴠɪᴅᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ.*` }, { quote: selo, mentions: [user] })
 }
 break
 
@@ -764,8 +767,8 @@ const membro = achar(groupMembers, marc_tds, mrc_ou_numero, menc_os2)
 if(!membro) return reply(mess.naoEncontrado())
 
 const user = alvo(membro, marc_tds || menc_os2)
-await diablo.group.demoteParticipants(from, [user])
-await diablo.message.send(from, { type: 'text', text: `*@${numero(user)} ғᴏɪ ʀᴇʙᴀɪxᴀᴅᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ.*` }, { quote: selo, mentions: [user] })
+await diablo.groupParticipantsUpdate(from, [user], 'demote')
+await enviar(from, { type: 'text', text: `*@${numero(user)} ғᴏɪ ʀᴇʙᴀɪxᴀᴅᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ.*` }, { quote: selo, mentions: [user] })
 }
 break
 
@@ -822,7 +825,7 @@ if(!videoMsg && !imagemMsg) return reply('*ʀᴇsᴘᴏɴᴅᴀ ᴜᴍᴀ ғᴏ�
 const tmp = path.join(__dirname, 'dados', 'media', `.bv-${Date.now()}`)
 fs.mkdirSync(path.dirname(tmp), { recursive: true })
 try {
-await diablo.message.downloadToFile(media, tmp)
+await baixarMidia(media, tmp)
 const buffer = fs.readFileSync(tmp)
 dataGp[0].wellcome[0].fundobv = buffer.toString('base64')
 dataGp[0].wellcome[0].fundobv_tipo = imagemMsg ? (String(imagemMsg?.mimetype || '').includes('png') ? 'png' : 'image') : 'gif'
@@ -854,7 +857,7 @@ if(!videoMsg && !imagemMsg) return reply('*ʀᴇsᴘᴏɴᴅᴀ ᴜᴍᴀ ғᴏ�
 const tmp = path.join(__dirname, 'dados', 'media', `.saiu-${Date.now()}`)
 fs.mkdirSync(path.dirname(tmp), { recursive: true })
 try {
-await diablo.message.downloadToFile(media, tmp)
+await baixarMidia(media, tmp)
 const buffer = fs.readFileSync(tmp)
 dataGp[0].wellcome[0].fundosaiu = buffer.toString('base64')
 dataGp[0].wellcome[0].fundosaiu_tipo = imagemMsg ? (String(imagemMsg?.mimetype || '').includes('png') ? 'png' : 'image') : 'gif'
@@ -978,7 +981,7 @@ fs.mkdirSync(pasta, { recursive: true })
 if(videoMsg) {
 await reagir('⏳').catch(() => {})
 limpar()
-await diablo.message.downloadToFile(media, path.join(pasta, 'fotomenu.mp4'))
+await baixarMidia(media, path.join(pasta, 'fotomenu.mp4'))
 await reagir('✅').catch(() => {})
 return reply('*ᴠɪᴅᴇᴏ ᴅᴏ ᴍᴇɴᴜ sᴀʟᴠᴏ.*')
 }
@@ -987,7 +990,7 @@ if(imagemMsg) {
 await reagir('⏳').catch(() => {})
 const ext = String(imagemMsg?.mimetype || '').toLowerCase().includes('png') ? 'png' : 'jpg'
 limpar()
-await diablo.message.downloadToFile(media, path.join(pasta, `fotomenu.${ext}`))
+await baixarMidia(media, path.join(pasta, `fotomenu.${ext}`))
 await reagir('✅').catch(() => {})
 return reply('*ғᴏᴛᴏ ᴅᴏ ᴍᴇɴᴜ sᴀʟᴠᴀ.*')
 }

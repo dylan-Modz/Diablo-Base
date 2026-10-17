@@ -1,78 +1,46 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Yoshirukkj/Download-/main/s4fdiy.jpg" alt="Diablo Base" width="100%">
-</p>
+# 🍁 Diablo Base — Stone WPP
 
-# 🍁 Diablo Base
+Base gratuita para bots de WhatsApp criada por **Dylan Modz**. Agora usa a biblioteca **[@stone-wpp/ofc](https://github.com/dylan-Modz/stone-wpp-ofc)**. Os comandos continuam no `diablo.js`.
 
-Base gratuita para bots de WhatsApp, criada por **Dylan Modz**. A base utiliza a biblioteca **Zapo** para conexão com o WhatsApp.
+## Instalação
 
-Feita principalmente para iniciantes que querem aprender, modificar comandos e criar seu próprio bot de forma simples.
+Requisitos: Node.js 20+, Git e um ambiente com processo Node.js persistente (VPS, Termux ou hospedagem Node adequada).
 
----
+    git clone https://github.com/dylan-Modz/Diablo-Base.git
+    cd Diablo-Base
+    npm install
+    npm start
 
-## 📦 Instalação
+No Termux: `pkg update -y && pkg install nodejs-lts git -y`. Algumas dependências nativas da Stone podem exigir compilação e nem todo Android tem binários compatíveis.
 
-No Termux:
+## Pareamento
 
-```bash
-pkg update -y
-pkg upgrade -y
-pkg install nodejs git -y
-```
+Na primeira execução informe o número com DDI no terminal, ou configure `PAIRING_NUMBER=5599999999999` (seu número completo) no ambiente para iniciar sem terminal.
 
-Clone a base:
+Abra WhatsApp → Aparelhos conectados → Conectar com número de telefone e digite o código exibido.
 
-```bash
-git clone https://github.com/dylan-Modz/Diablo-Base.git
-```
+A nova sessão fica em `database/stone-session/`. **Jamais suba credenciais ou essa pasta para o GitHub.**
 
-Entre na pasta:
+> Migração: o formato de sessão anterior não é compatível. Faça backup da sessão antiga antes de parear novamente; não apague a pasta de sessão antiga sem backup.
 
-```bash
-cd Diablo-Base
-```
+## Atualizar uma instalação anterior
 
-Instale as dependências:
+    git pull
+    rm -rf node_modules
+    npm install
+    npm run check
+    npm start
 
-```bash
-npm install
-```
+`node_modules` foi removido do controle de versão e está ignorado pelo `.gitignore`. A instalação das dependências é feita pelo npm. Não apague `database/` depois que a sessão da Stone estiver funcionando.
 
-Inicie:
+## Estrutura
 
-```bash
-npm start
-```
+- `connect.js`: conexão, pareamento, reconexão e eventos nativos da Stone
+- `diablo.js`: comandos, grupos e configurações
+- `dados/lib/stone-mensagens.js`: envio de mídias, reações, downloads e menu interativo usando Stone
+- `dados/config.json`: nome, prefixo e dono do bot
+- `dados/api.json`: integração com [Tokito APIs](https://tokito-apis.com.br)
 
-Na primeira inicialização, coloque o número do WhatsApp com DDI e faça o pareamento.
+O menu de categorias utiliza os botões interativos da Stone com imagem ou vídeo, sem o carrossel da implementação anterior. Faça teste no WhatsApp para verificar a apresentação do menu e as respostas da lista.
 
-### 🔄 Atualizar uma instalação existente
-
-Na pasta da base, execute:
-
-```bash
-git pull
-npm install
-npm start
-```
-
-O `npm install` instala a versão da Zapo indicada no `package.json`. Os menus interativos são mantidos pelo código da própria base.
-
----
-
-## 🌐 Tokito APIs
-
-Alguns comandos da base utilizam a **Tokito APIs**.
-
-https://tokito-apis.com.br
-
----
-
-## ⚡ Zapo
-
-A Diablo Base foi totalmente migrada para a biblioteca **Zapo**.
-
-**Documentação:**  
-https://zapo.to
-
-
+Stone WPP: [documentação](https://stone-wpp.vercel.app/) | [npm](https://www.npmjs.com/package/@stone-wpp/ofc)

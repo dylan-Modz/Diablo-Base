@@ -1,21 +1,22 @@
 {
   "name": "diablo-base",
   "version": "1.0.0",
-  "description": "Diablo Base - Base gratuita criada por dylan Modz e totalmente migrada para Zapo (: ",
+  "description": "Diablo Base com Stone WPP - Dylan Modz",
   "main": "connect.js",
-  "author": "dylan Modz",
+  "author": "Dylan Modz",
   "homepage": "https://tokito-apis.com.br",
   "license": "MIT",
   "scripts": {
-    "start": "node connect.js"
+    "start": "node connect.js",
+    "check": "node --check connect.js && node --check diablo.js && node --check dados/lib/stone-mensagens.js"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
+    "@stone-wpp/ofc": "1.0.3",
     "axios": "^1.12.2",
     "cfonts": "^3.3.1",
-    "chalk": "^4.1.2",
-    "zapo-js": "1.9.0"
+    "chalk": "^4.1.2"
   }
 }
